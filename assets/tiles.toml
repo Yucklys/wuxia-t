@@ -1,0 +1,19 @@
+[[data]]
+name = "空地"
+label = "."
+
+[data.passing]
+left = true
+right = true
+top = true
+down = true
+
+[[data]]
+name = "树木"
+label = "Y"
+
+[data.passing]
+left = false
+right = false
+top = false
+down = false

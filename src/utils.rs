@@ -12,12 +12,13 @@ use std::{
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
+    text::Span,
     Terminal,
 };
 
 use crate::{
     components::{GameState, Player},
-    message::Msg,
+    message::Tube,
 };
 
 pub fn run(tick_rate: Duration, cache: &AssetCache) -> Result<(), Box<dyn Error>> {
@@ -54,7 +55,10 @@ fn run_app<B: Backend>(
     let mut last_tick = Instant::now();
     state
         .messages
-        .push_msg(Msg::new(crate::message::MsgType::System, "系统", "测试"));
+        .new_tube(Tube::new(crate::message::TubeType::System, "系统"));
+
+    state.messages.add_sentence(0, Span::raw("测试"));
+    state.messages.add_sentence(1, Span::raw("我在说话"));
 
     loop {
         terminal.draw(|f| {

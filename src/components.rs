@@ -39,15 +39,15 @@ pub enum Direction {
 }
 
 #[derive(Default)]
-pub struct GameState {
+pub struct GameState<'a> {
     pub visible_range: usize,
     pub world_grid: WorldGrid,
-    pub messages: GameMessage,
+    pub messages: GameMessage<'a>,
     pub should_quit: bool,
     pub player: Player,
 }
 
-impl GameState {
+impl GameState<'_> {
     pub fn new() -> Self {
         Self {
             visible_range: 4,

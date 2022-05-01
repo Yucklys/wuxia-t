@@ -7,54 +7,94 @@ use tui::{
     Frame,
 };
 
-#[derive(Default)]
-pub struct GameMessage {
-    msgs: Vec<Msg>,
+pub struct GameMessage<'a> {
+    comb_id: Vec<usize>,
+    tubes: Vec<Tube<'a>>,
 }
 
-impl GameMessage {
+impl<'a> Default for GameMessage<'a> {
+    fn default() -> Self {
+        Self {
+            comb_id: vec![0, 1],
+            tubes: vec![
+                Tube::new(TubeType::System, "系统"),
+                Tube::new(TubeType::Input, "我"),
+                Tube::new(TubeType::Battle, "战斗"),
+            ],
+        }
+    }
+}
+
+impl<'a> GameMessage<'a> {
+    pub fn add_sentence(&mut self, id: usize, sentence: Span<'a>) {
+        if id < self.tubes.len() {
+            self.tubes[id].contents.push(sentence);
+        }
+    }
+
     pub fn draw<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
-        let msgs: Vec<Spans> = self.msgs.iter().map(|m| m.to_spans()).collect();
+        // find all messages in the tubes of comb_id
+        let msgs: Vec<Spans> = self.get_comb().iter().map(|m| m.to_spans()).collect();
 
         let msgs_list = Paragraph::new(msgs).block(Block::default().borders(Borders::ALL));
 
         f.render_widget(msgs_list, area);
     }
 
-    pub fn push_msg(&mut self, msg: Msg) {
-        self.msgs.push(msg);
+    pub fn get_comb(&self) -> Vec<&Tube<'a>> {
+        self.comb_id.iter().fold(vec![], |mut comb, &id| {
+            comb.push(&self.tubes[id]);
+            comb
+        })
+    }
+
+    pub fn new_tube(&mut self, tube: Tube<'a>) {
+        self.tubes.push(tube);
     }
 }
 
-pub struct Msg {
-    msg_type: MsgType,
+pub struct Tube<'a> {
+    tube_type: TubeType,
     from: String,
-    content: String,
+    contents: Vec<Span<'a>>,
 }
 
-impl Msg {
-    pub fn new(msg_type: MsgType, from: &str, content: &str) -> Self {
+impl<'a> Tube<'a> {
+    pub fn new(msg_type: TubeType, from: &str) -> Self {
         Self {
-            msg_type,
+            tube_type: msg_type,
             from: from.to_string(),
-            content: content.to_string(),
+            contents: Vec::new(),
         }
     }
 
-    pub fn get_style(&self) -> Style {
-        match self.msg_type {
-            MsgType::System => Style::default().fg(Color::Yellow),
-        }
-    }
+    // pub fn contents(mut self, contents: Vec<Span<'a>>) -> Self {
+    //     self.contents = contents;
+    //     self
+    // }
 
     pub fn to_spans(&self) -> Spans {
-        Spans::from(Span::styled(
-            format!("{}: {}", self.from, self.content),
-            self.get_style(),
-        ))
+        let mut output = vec![Span::styled(
+            format!("{}: ", self.from),
+            self.tube_type.get_style(),
+        )];
+        output.extend(self.contents.iter().map(|c| c.clone()));
+        Spans::from(output)
     }
 }
 
-pub enum MsgType {
+pub enum TubeType {
     System,
+    Input,
+    Battle,
+}
+
+impl TubeType {
+    pub fn get_style(&self) -> Style {
+        match *self {
+            TubeType::System => Style::default().fg(Color::Yellow),
+            TubeType::Input => Style::default().fg(Color::Cyan),
+            TubeType::Battle => Style::default().fg(Color::Red),
+        }
+    }
 }

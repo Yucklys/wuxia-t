@@ -1,4 +1,5 @@
 mod components;
+mod events;
 mod map;
 mod message;
 mod utils;

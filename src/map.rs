@@ -120,6 +120,7 @@ impl WorldGrid {
                 },
             )
         };
+
         // generate Tiles informations
         let mut grid = vec![];
         for y in y_start..y_end {
@@ -129,20 +130,18 @@ impl WorldGrid {
                     + (y as f64 - pos.1 as f64).powf(2.0))
                 .sqrt();
                 // ignore block if it is not within the display range
-                if distance <= display_range {
-                    // default tile is the one with index 0
-                    let tile = &tiles[blocks[y][x]];
-                    let label = if pos == (x, y) { "@" } else { &tile.label };
-                    // check if tile is in visible range
-                    let style = if pos == (x, y) {
-                        Style::default().fg(Color::Cyan)
-                    } else if distance <= range as f64 {
-                        Style::default().fg(Color::White)
-                    } else {
-                        Style::default().fg(Color::DarkGray)
-                    };
-                    row.push(Span::styled(format!("{} ", label), style));
-                }
+                // default tile is the one with index 0
+                let tile = &tiles[blocks[y][x]];
+                let label = if pos == (x, y) { "@" } else { &tile.label };
+                // check if tile is in visible range
+                let style = if pos == (x, y) {
+                    Style::default().fg(Color::Cyan)
+                } else if distance <= range as f64 {
+                    Style::default().fg(Color::White)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                };
+                row.push(Span::styled(format!("{} ", label), style));
             }
             grid.push(Spans::from(row));
         }

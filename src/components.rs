@@ -8,7 +8,7 @@ use tui::{
     Frame,
 };
 
-use crate::{map::WorldGrid, message::GameMessage};
+use crate::{events::*, map::WorldGrid, message::GameMessage};
 
 #[derive(Default)]
 pub struct Player {
@@ -45,6 +45,7 @@ pub struct GameState<'a> {
     pub messages: GameMessage<'a>,
     pub should_quit: bool,
     pub player: Player,
+    pub events: Vec<GameEvent>,
 }
 
 impl GameState<'_> {
@@ -52,6 +53,7 @@ impl GameState<'_> {
         Self {
             visible_range: 4,
             world_grid: WorldGrid::default(),
+            events: vec![GameEvent::GameInit],
             ..GameState::default()
         }
     }
@@ -77,6 +79,20 @@ impl GameState<'_> {
                 .player_move(&cache, &mut self.player, Direction::Up),
             _ => {}
         }
+    }
+
+    pub fn on_event(&mut self) {
+        if let Some(event) = self.events.first() {
+            match event {
+                GameEvent::GameInit => tutorial(self),
+            }
+
+            self.events.remove(0);
+        }
+    }
+
+    pub fn on_tick(&mut self) {
+        self.on_event();
     }
 }
 

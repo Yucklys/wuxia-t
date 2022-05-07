@@ -1,7 +1,10 @@
 use assets_manager::AssetCache;
 use crossterm::event::{KeyCode, KeyEvent};
 
-use crate::components::{GameMode, GameState, GameUI};
+use crate::{
+    components::{GameMode, GameState, GameUI},
+    map::Maps,
+};
 
 pub struct Game<'a> {
     pub ui: GameUI<'a>,
@@ -15,7 +18,7 @@ impl<'a> Game<'a> {
             Some(mode) => match mode {
                 GameMode::Edit => {}
                 GameMode::Story => match key.code {
-                    KeyCode::Char(c) => self.state.on_key(&self.cache, c),
+                    KeyCode::Char(c) => self.state.on_key(c),
                     _ => {}
                 },
             },
@@ -24,7 +27,8 @@ impl<'a> Game<'a> {
                 KeyCode::Enter => {
                     if let Some(i) = self.ui.dashboard.selected() {
                         match i {
-                            0 | 1 => self.state.game_mode = Some(GameMode::Story),
+                            0 => self.load_save(),
+                            1 => self.start_game(),
                             2 => self.state.game_mode = Some(GameMode::Edit),
                             _ => {}
                         }
@@ -34,5 +38,23 @@ impl<'a> Game<'a> {
                 _ => {}
             },
         }
+    }
+
+    pub fn load_save(&mut self) {
+        // TODO: Add load from save
+        self.state.game_mode = Some(GameMode::Story);
+    }
+
+    pub fn start_game(&mut self) {
+        self.state.game_mode = Some(GameMode::Story);
+        self.state.curr_map = Some(Maps::HuanHuaCun("tiles"));
+        self.state.load(&self.cache);
+    }
+
+    pub fn on_tick(&mut self) {
+        let cache = &self.cache;
+
+        // call on_tick() on UI and state
+        self.state.on_tick(cache);
     }
 }

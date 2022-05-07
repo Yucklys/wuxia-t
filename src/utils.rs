@@ -34,7 +34,6 @@ pub fn run(tick_rate: Duration) -> Result<(), Box<dyn Error>> {
     // create GameState
     let mut state = GameState::new();
     state.player = Player::init();
-    state.load_map(&cache, "浣花村");
 
     // create GameUI
     let ui = GameUI::default();
@@ -82,12 +81,7 @@ fn run_app<B: Backend>(
 
                             game.state.world_grid.draw_info(f, &game.state, chunks[0]);
 
-                            game.state.world_grid.draw_tiles(
-                                f,
-                                &game.cache,
-                                &game.state,
-                                chunks[1],
-                            );
+                            game.state.world_grid.draw_tiles(f, &game.state, chunks[1]);
                         }
 
                         {
@@ -118,8 +112,9 @@ fn run_app<B: Backend>(
 
         if last_tick.elapsed() >= tick_rate {
             last_tick = Instant::now();
-            game.state.on_tick();
+            game.on_tick();
         }
+
         if game.state.should_quit {
             return Ok(());
         }

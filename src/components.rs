@@ -8,7 +8,12 @@ use tui::{
     Frame,
 };
 
-use crate::{events::*, map::WorldGrid, message::GameMessage, ui::Dashboard};
+use crate::{
+    events::*,
+    map::{Maps, Tiles, WorldGrid},
+    message::GameMessage,
+    ui::Dashboard,
+};
 
 #[derive(Default)]
 pub struct Player {
@@ -51,6 +56,7 @@ impl<'a> GameUI<'a> {
 
 #[derive(Default)]
 pub struct GameState<'a> {
+    pub curr_map: Option<Maps<'a>>,
     pub events: Vec<GameEvent>,
     pub messages: GameMessage<'a>,
     pub player: Player,
@@ -70,25 +76,30 @@ impl GameState<'_> {
         }
     }
 
-    pub fn load_map(&mut self, cache: &AssetCache, map: &str) {
-        self.world_grid = WorldGrid::load_map(cache, map);
+    pub fn load(&mut self, cache: &AssetCache) {
+        self.load_map(cache);
     }
 
-    pub fn on_key(&mut self, cache: &AssetCache, code: char) {
+    /// Load current map from assets if curr_map is not None.
+    pub fn load_map(&mut self, cache: &AssetCache) {
+        if let Some(map) = &self.curr_map {
+            self.world_grid = WorldGrid::load(cache, map);
+        }
+    }
+
+    pub fn on_key(&mut self, code: char) {
         match code {
             'q' => self.should_quit = true,
             'h' => self
                 .world_grid
-                .player_move(&cache, &mut self.player, Direction::Left),
+                .player_move(&mut self.player, Direction::Left),
             'l' => self
                 .world_grid
-                .player_move(&cache, &mut self.player, Direction::Right),
+                .player_move(&mut self.player, Direction::Right),
             'j' => self
                 .world_grid
-                .player_move(&cache, &mut self.player, Direction::Down),
-            'k' => self
-                .world_grid
-                .player_move(&cache, &mut self.player, Direction::Up),
+                .player_move(&mut self.player, Direction::Down),
+            'k' => self.world_grid.player_move(&mut self.player, Direction::Up),
             _ => {}
         }
     }
@@ -103,8 +114,24 @@ impl GameState<'_> {
         }
     }
 
-    pub fn on_tick(&mut self) {
+    pub fn on_tick(&mut self, cache: &AssetCache) {
         self.on_event();
+
+        // check file watchers
+        if let Some(map) = &self.curr_map {
+            let (mut map_watcher, mut tile_watcher) = (
+                cache
+                    .load_expect::<WorldGrid>(map.map_file())
+                    .reload_watcher(),
+                cache.load_expect::<Tiles>(map.tile_file()).reload_watcher(),
+            );
+
+            cache.hot_reload();
+
+            if map_watcher.reloaded() || tile_watcher.reloaded() {
+                self.load_map(cache);
+            }
+        }
     }
 }
 

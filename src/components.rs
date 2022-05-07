@@ -8,7 +8,7 @@ use tui::{
     Frame,
 };
 
-use crate::{events::*, map::WorldGrid, message::GameMessage};
+use crate::{events::*, map::WorldGrid, message::GameMessage, ui::Dashboard};
 
 #[derive(Default)]
 pub struct Player {
@@ -39,13 +39,25 @@ pub enum Direction {
 }
 
 #[derive(Default)]
+pub struct GameUI<'a> {
+    pub dashboard: Dashboard<'a>,
+}
+
+impl<'a> GameUI<'a> {
+    pub fn draw<'s, B: Backend>(&mut self, f: &mut Frame<B>, state: &mut GameState<'s>) {
+        self.dashboard.draw(f, state);
+    }
+}
+
+#[derive(Default)]
 pub struct GameState<'a> {
+    pub events: Vec<GameEvent>,
+    pub messages: GameMessage<'a>,
+    pub player: Player,
+    pub should_quit: bool,
     pub visible_range: usize,
     pub world_grid: WorldGrid,
-    pub messages: GameMessage<'a>,
-    pub should_quit: bool,
-    pub player: Player,
-    pub events: Vec<GameEvent>,
+    pub game_mode: Option<GameMode>,
 }
 
 impl GameState<'_> {
@@ -94,6 +106,11 @@ impl GameState<'_> {
     pub fn on_tick(&mut self) {
         self.on_event();
     }
+}
+
+pub enum GameMode {
+    Story,
+    Edit,
 }
 
 #[derive(Default)]

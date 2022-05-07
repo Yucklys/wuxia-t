@@ -17,3 +17,23 @@ left = false
 right = false
 top = false
 down = false
+
+[[data]]
+name = "墙"
+label = "│"
+
+[data.passing]
+left = false
+right = false
+top = false
+down = false
+
+[[data]]
+name = "墙"
+label = "─"
+
+[data.passing]
+left = false
+right = false
+top = false
+down = false

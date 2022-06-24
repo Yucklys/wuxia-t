@@ -1,6 +1,9 @@
-use crate::components::{Direction, GameState, Player};
+use crate::{
+    components::{Direction, GameState, Player},
+    events::GameEvent,
+};
 use assets_manager::{loader, Asset, AssetCache};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tui::{
     backend::Backend,
     layout::{Alignment, Rect},
@@ -17,9 +20,9 @@ pub struct Tiles {
 }
 
 impl Asset for Tiles {
-    const EXTENSION: &'static str = "toml";
+    const EXTENSION: &'static str = "json";
 
-    type Loader = loader::TomlLoader;
+    type Loader = loader::JsonLoader;
 }
 
 #[derive(Default, Deserialize, Clone)]
@@ -38,28 +41,29 @@ pub struct Passing {
 }
 
 #[derive(Default, Clone, Deserialize)]
-pub struct WorldGrid {
+pub struct World {
     pub blocks: Vec<Vec<usize>>,
     #[serde(skip)]
     pub tiles: Vec<Tile>,
+    pub events: Vec<GameEvent>,
     pub name: String,
     pub region: String,
 }
 
-impl Asset for WorldGrid {
-    const EXTENSION: &'static str = "toml";
+impl Asset for World {
+    const EXTENSION: &'static str = "json";
 
-    type Loader = loader::TomlLoader;
+    type Loader = loader::JsonLoader;
 }
 
-impl WorldGrid {
-    pub fn load(cache: &AssetCache, map: &Maps) -> WorldGrid {
+impl World {
+    pub fn load(cache: &AssetCache, map: &Maps) -> World {
         // get map_file and tile_file name
         let map_file = map.map_file();
         let tile_file = map.tile_file();
 
         // load grid and tiles
-        let handle = cache.load_expect::<WorldGrid>(map_file);
+        let handle = cache.load_expect::<World>(map_file);
         let mut world = handle.read().to_owned();
         let handle = cache.load_expect::<Tiles>(tile_file);
         let tiles = &handle.read().data;
@@ -204,6 +208,7 @@ impl WorldGrid {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum Maps<'a> {
     HuanHuaCun(&'a str),
 }

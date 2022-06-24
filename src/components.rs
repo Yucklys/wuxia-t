@@ -1,6 +1,8 @@
 use core::fmt;
+use std::collections::HashSet;
 
 use assets_manager::AssetCache;
+use serde::{Deserialize, Serialize};
 use tui::{
     backend::Backend,
     layout::Rect,
@@ -10,12 +12,12 @@ use tui::{
 
 use crate::{
     events::*,
-    map::{Maps, Tiles, WorldGrid},
     message::GameMessage,
     ui::Dashboard,
+    world::{Maps, Tiles, World},
 };
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct Player {
     pub name: String,
     pub pos: (usize, usize),
@@ -54,24 +56,29 @@ impl<'a> GameUI<'a> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct GameState<'a> {
+    #[serde(borrow)]
     pub curr_map: Option<Maps<'a>>,
-    pub events: Vec<GameEvent>,
-    pub messages: GameMessage<'a>,
+    pub switches: HashSet<GameSwitch>,
+    pub game_mode: Option<GameMode>,
+    pub messages: GameMessage,
     pub player: Player,
+    #[serde(skip)]
     pub should_quit: bool,
     pub visible_range: usize,
-    pub world_grid: WorldGrid,
-    pub game_mode: Option<GameMode>,
+    #[serde(skip)]
+    pub world_grid: World,
 }
 
 impl GameState<'_> {
     pub fn new() -> Self {
+        let mut switches = HashSet::new();
+        switches.insert(GameSwitch::Tutorial);
         Self {
             visible_range: 4,
-            world_grid: WorldGrid::default(),
-            events: vec![GameEvent::GameInit],
+            world_grid: World::default(),
+            switches,
             ..GameState::default()
         }
     }
@@ -83,7 +90,7 @@ impl GameState<'_> {
     /// Load current map from assets if curr_map is not None.
     pub fn load_map(&mut self, cache: &AssetCache) {
         if let Some(map) = &self.curr_map {
-            self.world_grid = WorldGrid::load(cache, map);
+            self.world_grid = World::load(cache, map);
         }
     }
 
@@ -102,27 +109,31 @@ impl GameState<'_> {
             'k' => self.world_grid.player_move(&mut self.player, Direction::Up),
             _ => {}
         }
+
+        self.update();
     }
 
-    pub fn on_event(&mut self) {
-        if let Some(event) = self.events.first() {
-            match event {
-                GameEvent::GameInit => tutorial(self),
-            }
+    pub fn update(&mut self) {
+        // check active event
+        let events = &mut self.world_grid.events;
+        for e in events {
+            if e.is_active(self.player.pos, &self.switches) {
+                if e.repeat || e.num_execute == 0 {
+                    match e.name {
+                        Event::Tutorial => tutorial::tutorial(&mut self.messages),
+                    }
 
-            self.events.remove(0);
+                    e.num_execute += 1;
+                }
+            }
         }
     }
 
     pub fn on_tick(&mut self, cache: &AssetCache) {
-        self.on_event();
-
         // check file watchers
         if let Some(map) = &self.curr_map {
             let (mut map_watcher, mut tile_watcher) = (
-                cache
-                    .load_expect::<WorldGrid>(map.map_file())
-                    .reload_watcher(),
+                cache.load_expect::<World>(map.map_file()).reload_watcher(),
                 cache.load_expect::<Tiles>(map.tile_file()).reload_watcher(),
             );
 
@@ -135,6 +146,7 @@ impl GameState<'_> {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum GameMode {
     Story,
     Edit,

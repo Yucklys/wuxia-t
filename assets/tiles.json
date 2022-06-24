@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+        "label": ".",
+      "name": "空地",
+      "passing": {
+        "down": true,
+        "left": true,
+        "right": true,
+        "top": true
+      }
+    },
+    {
+      "label": "Y",
+      "name": "树木",
+      "passing": {
+        "down": false,
+        "left": false,
+        "right": false,
+        "top": false
+      }
+    },
+    {
+      "label": "│",
+      "name": "墙",
+      "passing": {
+        "down": false,
+        "left": false,
+        "right": false,
+        "top": false
+      }
+    },
+    {
+      "label": "─",
+      "name": "墙",
+      "passing": {
+        "down": false,
+        "left": false,
+        "right": false,
+        "top": false
+      }
+    }
+  ]
+}

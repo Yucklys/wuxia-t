@@ -3,7 +3,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{
     components::{GameMode, GameState, GameUI},
-    map::Maps,
+    world::Maps,
 };
 
 pub struct Game<'a> {

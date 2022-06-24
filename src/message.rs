@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use tui::{
     backend::Backend,
     layout::Rect,
@@ -7,22 +8,23 @@ use tui::{
     Frame,
 };
 
-pub struct GameMessage<'a> {
-    messages: Vec<Msg<'a>>,
+#[derive(Serialize, Deserialize)]
+pub struct GameMessage {
+    messages: Vec<Msg>,
 }
 
-impl<'a> Default for GameMessage<'a> {
+impl Default for GameMessage {
     fn default() -> Self {
         Self { messages: vec![] }
     }
 }
 
-impl<'a> GameMessage<'a> {
-    pub fn add_sentence(&mut self, msg_type: MsgType, sentence: Vec<Span<'a>>) {
+impl GameMessage {
+    pub fn add_sentence(&mut self, msg_type: MsgType, sentence: Vec<(&str, Style)>) {
         self.messages.push(Msg::new(msg_type, sentence));
     }
 
-    pub fn add_sentences(&mut self, bunch: Vec<(MsgType, Vec<Span<'a>>)>) {
+    pub fn add_sentences(&mut self, bunch: Vec<(MsgType, Vec<(&str, Style)>)>) {
         for (msg_type, sentence) in bunch {
             self.add_sentence(msg_type, sentence);
         }
@@ -40,14 +42,21 @@ impl<'a> GameMessage<'a> {
     }
 }
 
-pub struct Msg<'a> {
+#[derive(Serialize, Deserialize)]
+pub struct Msg {
     msg_type: MsgType,
-    contents: Vec<Span<'a>>,
+    contents: Vec<(String, Style)>,
 }
 
-impl<'a> Msg<'a> {
-    pub fn new(msg_type: MsgType, contents: Vec<Span<'a>>) -> Self {
-        Self { msg_type, contents }
+impl Msg {
+    pub fn new(msg_type: MsgType, contents: Vec<(&str, Style)>) -> Self {
+        Self {
+            msg_type,
+            contents: contents
+                .iter()
+                .map(|(raw, style)| (raw.to_string(), *style))
+                .collect(),
+        }
     }
 
     // pub fn contents(mut self, contents: Vec<Span<'a>>) -> Self {
@@ -57,14 +66,19 @@ impl<'a> Msg<'a> {
 
     pub fn to_spans(&self) -> Spans {
         let mut output = vec![Span::styled(
-            format!("{}: ", self.msg_type.get_from()),
+            format!("{}:", self.msg_type.get_from()),
             self.msg_type.get_style(),
         )];
-        output.extend(self.contents.iter().map(|c| c.clone()));
+        output.extend(
+            self.contents
+                .iter()
+                .map(|(raw, style)| Span::styled(raw, *style)),
+        );
         Spans::from(output)
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub enum MsgType {
     System,
     Input,

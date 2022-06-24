@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tui = "0.18"
+tui = { version = "0.18", features = ["serde"] }
 crossterm = "0.23"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.5.9"
-assets_manager = { version = "0.7.2", features = ["toml", "hot-reloading"] }
+serde_json = "1.0"
+assets_manager = { version = "0.7.2", features = ["json", "hot-reloading"] }

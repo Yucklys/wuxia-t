@@ -1,10 +1,10 @@
 mod components;
 mod events;
 mod game;
-mod map;
 mod message;
 mod ui;
 mod utils;
+mod world;
 
 use std::{error::Error, time::Duration};
 

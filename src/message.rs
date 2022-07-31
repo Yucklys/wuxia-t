@@ -9,24 +9,24 @@ use tui::{
 };
 
 #[derive(Serialize, Deserialize)]
-pub struct GameMessage {
+pub struct MessageSystem {
     messages: Vec<Msg>,
 }
 
-impl Default for GameMessage {
+impl Default for MessageSystem {
     fn default() -> Self {
         Self { messages: vec![] }
     }
 }
 
-impl GameMessage {
-    pub fn add_sentence(&mut self, msg_type: MsgType, sentence: Vec<(&str, Style)>) {
-        self.messages.push(Msg::new(msg_type, sentence));
+impl MessageSystem {
+    pub fn add_sentence(&mut self, msg: Msg) {
+        self.messages.push(msg);
     }
 
-    pub fn add_sentences(&mut self, bunch: Vec<(MsgType, Vec<(&str, Style)>)>) {
-        for (msg_type, sentence) in bunch {
-            self.add_sentence(msg_type, sentence);
+    pub fn add_sentences(&mut self, bunch: Vec<Msg>) {
+        for msg in bunch {
+            self.add_sentence(msg);
         }
     }
 
@@ -42,23 +42,30 @@ impl GameMessage {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
+pub enum MsgStyle {
+    Default,
+    Hint,
+    Target,
+}
+
+impl MsgStyle {
+    pub fn to_style(&self) -> Style {
+        match *self {
+            MsgStyle::Default => Style::default(),
+            MsgStyle::Hint => Style::default().fg(Color::Yellow),
+            MsgStyle::Target => Style::default().fg(Color::Blue),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Msg {
     msg_type: MsgType,
-    contents: Vec<(String, Style)>,
+    contents: Vec<(String, MsgStyle)>,
 }
 
 impl Msg {
-    pub fn new(msg_type: MsgType, contents: Vec<(&str, Style)>) -> Self {
-        Self {
-            msg_type,
-            contents: contents
-                .iter()
-                .map(|(raw, style)| (raw.to_string(), *style))
-                .collect(),
-        }
-    }
-
     // pub fn contents(mut self, contents: Vec<Span<'a>>) -> Self {
     //     self.contents = contents;
     //     self
@@ -72,13 +79,13 @@ impl Msg {
         output.extend(
             self.contents
                 .iter()
-                .map(|(raw, style)| Span::styled(raw, *style)),
+                .map(|(raw, style)| Span::styled(raw, style.to_style())),
         );
         Spans::from(output)
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub enum MsgType {
     System,
     Input,

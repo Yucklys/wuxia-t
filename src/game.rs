@@ -1,5 +1,6 @@
 use assets_manager::AssetCache;
 use crossterm::event::{KeyCode, KeyEvent};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     components::{GameMode, GameState, GameUI},

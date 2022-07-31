@@ -1,5 +1,5 @@
 use core::fmt;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use assets_manager::AssetCache;
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use tui::{
 
 use crate::{
     events::*,
-    message::GameMessage,
+    message::MessageSystem,
     ui::Dashboard,
     world::{Maps, Tiles, World},
 };
@@ -60,31 +60,30 @@ impl<'a> GameUI<'a> {
 pub struct GameState<'a> {
     #[serde(borrow)]
     pub curr_map: Option<Maps<'a>>,
-    pub switches: HashSet<GameSwitch>,
+    pub switches: HashMap<String, bool>,
     pub game_mode: Option<GameMode>,
-    pub messages: GameMessage,
+    pub messages: MessageSystem,
     pub player: Player,
     #[serde(skip)]
     pub should_quit: bool,
     pub visible_range: usize,
     #[serde(skip)]
     pub world_grid: World,
+    pub event_system: EventSystem,
 }
 
 impl GameState<'_> {
     pub fn new() -> Self {
-        let mut switches = HashSet::new();
-        switches.insert(GameSwitch::Tutorial);
         Self {
             visible_range: 4,
             world_grid: World::default(),
-            switches,
             ..GameState::default()
         }
     }
 
     pub fn load(&mut self, cache: &AssetCache) {
         self.load_map(cache);
+        self.load_events(cache);
     }
 
     /// Load current map from assets if curr_map is not None.
@@ -92,6 +91,11 @@ impl GameState<'_> {
         if let Some(map) = &self.curr_map {
             self.world_grid = World::load(cache, map);
         }
+    }
+
+    // Load all events from assets
+    pub fn load_events(&mut self, cache: &AssetCache) {
+        self.event_system = EventSystem::load(cache);
     }
 
     pub fn on_key(&mut self, code: char) {
@@ -114,18 +118,15 @@ impl GameState<'_> {
     }
 
     pub fn update(&mut self) {
-        // check active event
-        let events = &mut self.world_grid.events;
-        for e in events {
-            if e.is_active(self.player.pos, &self.switches) {
-                if e.repeat || e.num_execute == 0 {
-                    match e.name {
-                        Event::Tutorial => tutorial::tutorial(&mut self.messages),
-                    }
+        // run ready event
+        self.update_events();
+    }
 
-                    e.num_execute += 1;
-                }
-            }
+    fn update_events(&mut self) {
+        let ready_events = self.event_system.get_ready();
+
+        for e in ready_events {
+            e.run(&mut self.messages);
         }
     }
 

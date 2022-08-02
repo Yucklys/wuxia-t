@@ -1,4 +1,6 @@
-use assets_manager::AssetCache;
+use std::collections::HashMap;
+
+use assets_manager::{loader, Asset, AssetCache};
 use crossterm::event::{KeyCode, KeyEvent};
 use serde::{Deserialize, Serialize};
 
@@ -57,5 +59,50 @@ impl<'a> Game<'a> {
 
         // call on_tick() on UI and state
         self.state.on_tick(cache);
+    }
+}
+
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct GameSwitch(HashMap<String, bool>);
+
+impl Asset for GameSwitch {
+    const EXTENSION: &'static str = "json";
+
+    type Loader = loader::JsonLoader;
+
+    const HOT_RELOADED: bool = true;
+}
+
+impl GameSwitch {
+    pub fn load(cache: &AssetCache) -> GameSwitch {
+        let switch_file = "switches";
+        let handle = cache.load_expect::<GameSwitch>(switch_file);
+
+        handle.read().to_owned()
+    }
+
+    /// Check if a switch is on. Return false if the switch does not
+    /// exist.
+    pub fn is_on(&self, other: &str) -> bool {
+        match self.0.get(other) {
+            Some(&state) => state,
+            None => false,
+        }
+    }
+
+    /// Check if a list of switches is on.
+    ///
+    /// Empty list will always return true. For non empty list,
+    /// all switches must be on for the return to be true.
+    pub fn is_all_on(&self, others: &Vec<String>) -> bool {
+        let mut active = true;
+        let mut index = 0;
+
+        while active && index < others.len() {
+            active = self.is_on(&others[index]);
+            index += 1;
+        }
+
+        active
     }
 }

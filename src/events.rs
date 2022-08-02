@@ -1,14 +1,17 @@
 use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 
-use crate::message::{MessageSystem, Msg};
+use crate::{
+    game::GameSwitch,
+    message::{MessageSystem, Msg},
+};
 
 #[derive(Deserialize, Clone, Hash, Eq, PartialEq)]
 pub enum EventActivation {
     Touch,
 }
 
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, Debug)]
 pub enum EventStage {
     Waiting,
     Ready,
@@ -22,7 +25,7 @@ impl Default for EventStage {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GameEvent {
     id: usize,
     stage: EventStage,
@@ -45,8 +48,10 @@ impl PartialEq for GameEvent {
 impl Eq for GameEvent {}
 
 impl GameEvent {
-    pub fn ready(&mut self) {
-        self.stage = EventStage::Ready;
+    pub fn ready(&mut self, g_switch: &GameSwitch) {
+        if g_switch.is_all_on(&self.switch) {
+            self.stage = EventStage::Ready;
+        }
     }
 
     pub fn run(&mut self, msg_system: &mut MessageSystem) {
@@ -81,6 +86,13 @@ impl EventSystem {
         self.events
             .iter_mut()
             .filter(|e| e.stage == EventStage::Ready)
+            .collect()
+    }
+
+    pub fn get_waiting(&mut self) -> Vec<&mut GameEvent> {
+        self.events
+            .iter_mut()
+            .filter(|e| e.stage == EventStage::Waiting)
             .collect()
     }
 }

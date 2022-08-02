@@ -42,7 +42,7 @@ impl MessageSystem {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum MsgStyle {
     Default,
     Hint,
@@ -59,7 +59,7 @@ impl MsgStyle {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Msg {
     msg_type: MsgType,
     contents: Vec<(String, MsgStyle)>,
@@ -85,7 +85,7 @@ impl Msg {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub enum MsgType {
     System,
     Input,

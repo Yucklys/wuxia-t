@@ -1,5 +1,4 @@
 use core::fmt;
-use std::collections::{HashMap, HashSet};
 
 use assets_manager::AssetCache;
 use serde::{Deserialize, Serialize};
@@ -12,6 +11,7 @@ use tui::{
 
 use crate::{
     events::*,
+    game::GameSwitch,
     message::MessageSystem,
     ui::Dashboard,
     world::{Maps, Tiles, World},
@@ -60,16 +60,18 @@ impl<'a> GameUI<'a> {
 pub struct GameState<'a> {
     #[serde(borrow)]
     pub curr_map: Option<Maps<'a>>,
-    pub switches: HashMap<String, bool>,
+    pub event_system: EventSystem,
     pub game_mode: Option<GameMode>,
     pub messages: MessageSystem,
+    #[serde(skip)]
+    pub need_update: bool,
     pub player: Player,
     #[serde(skip)]
     pub should_quit: bool,
+    pub switches: GameSwitch,
     pub visible_range: usize,
     #[serde(skip)]
     pub world_grid: World,
-    pub event_system: EventSystem,
 }
 
 impl GameState<'_> {
@@ -84,13 +86,20 @@ impl GameState<'_> {
     pub fn load(&mut self, cache: &AssetCache) {
         self.load_map(cache);
         self.load_events(cache);
+        self.load_switch(cache);
+
+        self.update();
     }
 
     /// Load current map from assets if curr_map is not None.
-    pub fn load_map(&mut self, cache: &AssetCache) {
+    fn load_map(&mut self, cache: &AssetCache) {
         if let Some(map) = &self.curr_map {
             self.world_grid = World::load(cache, map);
         }
+    }
+
+    fn load_switch(&mut self, cache: &AssetCache) {
+        self.switches = GameSwitch::load(cache);
     }
 
     // Load all events from assets
@@ -113,20 +122,32 @@ impl GameState<'_> {
             'k' => self.world_grid.player_move(&mut self.player, Direction::Up),
             _ => {}
         }
-
-        self.update();
     }
 
     pub fn update(&mut self) {
-        // run ready event
+        // update events status
         self.update_events();
+
+        self.need_update = false;
     }
 
     fn update_events(&mut self) {
-        let ready_events = self.event_system.get_ready();
+        {
+            let waiting_events = self.event_system.get_waiting();
+            if !waiting_events.is_empty() {
+                for e in waiting_events {
+                    e.ready(&self.switches);
+                }
+            }
+        }
 
-        for e in ready_events {
-            e.run(&mut self.messages);
+        {
+            let ready_events = self.event_system.get_ready();
+            if !ready_events.is_empty() {
+                for e in ready_events {
+                    e.run(&mut self.messages);
+                }
+            }
         }
     }
 
@@ -143,6 +164,11 @@ impl GameState<'_> {
             if map_watcher.reloaded() || tile_watcher.reloaded() {
                 self.load_map(cache);
             }
+        }
+
+        // Check whether the game needs to update
+        if self.need_update {
+            self.update();
         }
     }
 }

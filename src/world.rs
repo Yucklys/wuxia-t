@@ -1,7 +1,4 @@
-use crate::{
-    components::{Direction, GameState, Player},
-    events::GameEvent,
-};
+use crate::components::{Direction, GameState, Player};
 use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 use tui::{
@@ -45,7 +42,6 @@ pub struct World {
     pub blocks: Vec<Vec<usize>>,
     #[serde(skip)]
     pub tiles: Vec<Tile>,
-    pub events: Vec<GameEvent>,
     pub name: String,
     pub region: String,
 }

@@ -40,7 +40,7 @@ pub fn run(tick_rate: Duration) -> Result<(), Box<dyn Error>> {
 
     // create Game
     let game = Game { ui, state, cache };
-    run_app(&mut terminal, game, tick_rate)?;
+    run_game(&mut terminal, game, tick_rate)?;
 
     disable_raw_mode()?;
     execute!(
@@ -53,7 +53,7 @@ pub fn run(tick_rate: Duration) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(
+fn run_game<B: Backend>(
     terminal: &mut Terminal<B>,
     mut game: Game,
     tick_rate: Duration,

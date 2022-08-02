@@ -10,33 +10,13 @@ use tui::{
 };
 
 use crate::{
+    character::Player,
     events::*,
     game::GameSwitch,
     message::MessageSystem,
     ui::Dashboard,
     world::{Maps, Tiles, World},
 };
-
-#[derive(Default, Serialize, Deserialize)]
-pub struct Player {
-    pub name: String,
-    pub pos: (usize, usize),
-}
-
-impl Player {
-    pub fn init() -> Self {
-        Self {
-            name: "少年".to_string(),
-            pos: (3, 0),
-        }
-    }
-
-    pub fn draw_basic_info<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
-        let info = Paragraph::new(self.name.as_str()).block(Block::default().borders(Borders::ALL));
-
-        f.render_widget(info, area);
-    }
-}
 
 pub enum Direction {
     Left,

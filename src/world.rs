@@ -1,4 +1,7 @@
-use crate::components::{Direction, GameState, Player};
+use crate::{
+    character::*,
+    components::{Direction, GameState},
+};
 use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 use tui::{
@@ -75,7 +78,11 @@ impl World {
         let style = Style::default().fg(Color::Cyan);
         let name = Paragraph::new(Spans::from(vec![
             Span::styled(format!("{}{} {}", self.region, DOT, self.name), style),
-            Span::raw(format!("({}, {})", state.player.pos.0, state.player.pos.1)),
+            Span::raw(format!(
+                "({}, {})",
+                state.player.get_x(),
+                state.player.get_y()
+            )),
         ]))
         .block(
             Block::default()
@@ -101,7 +108,7 @@ impl World {
             let height = blocks.len();
             let width = blocks[0].len();
             let display_range = (3 * range) as f64;
-            let pos = player.pos;
+            let pos = player.get_pos();
 
             // find visible tiles relative to current pos
             let (x_start, x_end, y_start, y_end) = {
@@ -111,17 +118,13 @@ impl World {
                         Some(start) => start,
                         None => 0,
                     },
-                    if pos.0 + r > width {
-                        width - 1
-                    } else {
-                        pos.0 + r
-                    },
+                    if pos.0 + r > width { width } else { pos.0 + r },
                     match pos.1.checked_sub(r) {
                         Some(start) => start,
                         None => 0,
                     },
                     if pos.1 + r > height {
-                        height - 1
+                        height
                     } else {
                         pos.1 + r
                     },
@@ -160,7 +163,7 @@ impl World {
     }
 
     pub fn player_move(&self, player: &mut Player, direction: Direction) {
-        let (x, y) = player.pos;
+        let (x, y) = player.get_pos();
         let Self { blocks, tiles, .. } = self;
         if !blocks.is_empty() {
             let width = blocks[0].len();
@@ -172,7 +175,7 @@ impl World {
                         && tiles[blocks[y][x]].passing.left
                         && tiles[blocks[y][x - 1]].passing.right
                     {
-                        player.pos.0 = x - 1;
+                        player.move_left();
                     }
                 }
                 Direction::Right => {
@@ -180,7 +183,7 @@ impl World {
                         && tiles[blocks[y][x]].passing.right
                         && tiles[blocks[y][x + 1]].passing.left
                     {
-                        player.pos.0 = x + 1;
+                        player.move_right();
                     }
                 }
                 Direction::Up => {
@@ -188,7 +191,7 @@ impl World {
                         && tiles[blocks[y][x]].passing.top
                         && tiles[blocks[y - 1][x]].passing.down
                     {
-                        player.pos.1 = y - 1;
+                        player.move_up();
                     }
                 }
                 Direction::Down => {
@@ -196,7 +199,7 @@ impl World {
                         && tiles[blocks[y][x]].passing.down
                         && tiles[blocks[y + 1][x]].passing.top
                     {
-                        player.pos.1 = y + 1;
+                        player.move_down();
                     }
                 }
             }

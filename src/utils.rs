@@ -16,7 +16,8 @@ use tui::{
 };
 
 use crate::{
-    components::{GameMode, GameState, GameUI, Player},
+    character::{Character, Player},
+    components::{GameMode, GameState, GameUI},
     game::Game,
 };
 
@@ -94,7 +95,7 @@ fn run_game<B: Backend>(
 
                             game.state.messages.draw(f, chunks[0]);
 
-                            game.state.player.draw_basic_info(f, chunks[1]);
+                            game.state.player.draw_short_desc(f, chunks[1]);
                         }
                     }
                 },

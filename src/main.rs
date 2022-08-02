@@ -1,3 +1,4 @@
+mod character;
 mod components;
 mod events;
 mod game;

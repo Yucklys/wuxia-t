@@ -4,7 +4,7 @@ use tui::{
     Frame,
 };
 
-use crate::components::GameState;
+use crate::game::GameState;
 
 use super::Menu;
 

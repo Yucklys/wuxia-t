@@ -1,23 +1,5 @@
 use core::fmt;
 
-use assets_manager::AssetCache;
-use serde::{Deserialize, Serialize};
-use tui::{
-    backend::Backend,
-    layout::Rect,
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
-
-use crate::{
-    character::Player,
-    events::*,
-    game::GameSwitch,
-    message::MessageSystem,
-    ui::Dashboard,
-    world::{Maps, Tiles, World},
-};
-
 pub enum Direction {
     Left,
     Right,
@@ -26,150 +8,16 @@ pub enum Direction {
 }
 
 #[derive(Default)]
-pub struct GameUI<'a> {
-    pub dashboard: Dashboard<'a>,
-}
-
-impl<'a> GameUI<'a> {
-    pub fn draw<'s, B: Backend>(&mut self, f: &mut Frame<B>, state: &mut GameState<'s>) {
-        self.dashboard.draw(f, state);
-    }
-}
-
-#[derive(Default, Serialize, Deserialize)]
-pub struct GameState<'a> {
-    #[serde(borrow)]
-    pub curr_map: Option<Maps<'a>>,
-    pub event_system: EventSystem,
-    pub game_mode: Option<GameMode>,
-    pub messages: MessageSystem,
-    #[serde(skip)]
-    pub need_update: bool,
-    pub player: Player,
-    #[serde(skip)]
-    pub should_quit: bool,
-    pub switches: GameSwitch,
-    pub visible_range: usize,
-    #[serde(skip)]
-    pub world_grid: World,
-}
-
-impl GameState<'_> {
-    pub fn new() -> Self {
-        Self {
-            visible_range: 4,
-            world_grid: World::default(),
-            ..GameState::default()
-        }
-    }
-
-    pub fn load(&mut self, cache: &AssetCache) {
-        self.load_map(cache);
-        self.load_events(cache);
-        self.load_switch(cache);
-
-        self.update();
-    }
-
-    /// Load current map from assets if curr_map is not None.
-    fn load_map(&mut self, cache: &AssetCache) {
-        if let Some(map) = &self.curr_map {
-            self.world_grid = World::load(cache, map);
-        }
-    }
-
-    fn load_switch(&mut self, cache: &AssetCache) {
-        self.switches = GameSwitch::load(cache);
-    }
-
-    // Load all events from assets
-    pub fn load_events(&mut self, cache: &AssetCache) {
-        self.event_system = EventSystem::load(cache);
-    }
-
-    pub fn on_key(&mut self, code: char) {
-        match code {
-            'q' => self.should_quit = true,
-            'h' => self
-                .world_grid
-                .player_move(&mut self.player, Direction::Left),
-            'l' => self
-                .world_grid
-                .player_move(&mut self.player, Direction::Right),
-            'j' => self
-                .world_grid
-                .player_move(&mut self.player, Direction::Down),
-            'k' => self.world_grid.player_move(&mut self.player, Direction::Up),
-            _ => {}
-        }
-    }
-
-    pub fn update(&mut self) {
-        // update events status
-        self.update_events();
-
-        self.need_update = false;
-    }
-
-    fn update_events(&mut self) {
-        {
-            let waiting_events = self.event_system.get_waiting();
-            if !waiting_events.is_empty() {
-                for e in waiting_events {
-                    e.ready(&self.switches);
-                }
-            }
-        }
-
-        {
-            let ready_events = self.event_system.get_ready();
-            if !ready_events.is_empty() {
-                for e in ready_events {
-                    e.run(&mut self.messages);
-                }
-            }
-        }
-    }
-
-    pub fn on_tick(&mut self, cache: &AssetCache) {
-        // check file watchers
-        if let Some(map) = &self.curr_map {
-            let (mut map_watcher, mut tile_watcher) = (
-                cache.load_expect::<World>(map.map_file()).reload_watcher(),
-                cache.load_expect::<Tiles>(map.tile_file()).reload_watcher(),
-            );
-
-            cache.hot_reload();
-
-            if map_watcher.reloaded() || tile_watcher.reloaded() {
-                self.load_map(cache);
-            }
-        }
-
-        // Check whether the game needs to update
-        if self.need_update {
-            self.update();
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum GameMode {
-    Story,
-    Edit,
-}
-
-#[derive(Default)]
 pub struct WorldState {
-    pub clock: GameClock,
+    pub clock: Clock,
 }
 
-pub struct GameClock {
+pub struct Clock {
     pub hour: Hour,
     pub subs: u16,
 }
 
-impl Default for GameClock {
+impl Default for Clock {
     fn default() -> Self {
         Self {
             hour: Hour::Zi,
@@ -178,7 +26,7 @@ impl Default for GameClock {
     }
 }
 
-impl fmt::Display for GameClock {
+impl fmt::Display for Clock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -191,9 +39,7 @@ impl fmt::Display for GameClock {
             }
         )
     }
-}
-
-// TODO apply time system
+} // TODO apply time system
 #[allow(dead_code)]
 pub enum Hour {
     Zi,

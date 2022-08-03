@@ -1,7 +1,4 @@
-use crate::{
-    character::*,
-    components::{Direction, GameState},
-};
+use crate::{character::*, components::Direction, game::GameState};
 use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 use tui::{

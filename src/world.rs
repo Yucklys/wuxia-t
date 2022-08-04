@@ -139,7 +139,11 @@ impl World {
                     // ignore block if it is not within the display range
                     // default tile is the one with index 0
                     let tile = &tiles[blocks[y][x]];
-                    let label = if pos == (x, y) { "@" } else { &tile.label };
+                    let label = if pos == (x, y) {
+                        player.symbol()
+                    } else {
+                        &tile.label
+                    };
                     // check if tile is in visible range
                     let style = if pos == (x, y) {
                         Style::default().fg(Color::Cyan)

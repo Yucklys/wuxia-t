@@ -1,4 +1,7 @@
-use crate::{character::*, components::Direction, game::GameState};
+use crate::{
+    components::Direction,
+    game::{Character, GameState},
+};
 use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 use tui::{
@@ -10,6 +13,8 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
+
+use super::player::Player;
 
 #[derive(Deserialize)]
 pub struct Tiles {

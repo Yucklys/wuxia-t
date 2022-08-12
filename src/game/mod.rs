@@ -1,3 +1,6 @@
+mod character;
+mod events;
+
 use std::collections::HashMap;
 
 use assets_manager::{loader, Asset, AssetCache};
@@ -5,13 +8,15 @@ use crossterm::event::{KeyCode, KeyEvent};
 use serde::{Deserialize, Serialize};
 use tui::{backend::Backend, Frame};
 
-use crate::{
-    character::Player,
-    components::Direction,
-    events::*,
+pub use character::*;
+pub use events::*;
+
+use crate::components::{
+    dashboard::Dashboard,
+    map::{Maps, Tiles, World},
     message::MessageSystem,
-    ui::Dashboard,
-    world::{Maps, Tiles, World},
+    player::Player,
+    Direction,
 };
 
 pub struct Game<'a> {

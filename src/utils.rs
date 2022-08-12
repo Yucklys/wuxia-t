@@ -16,8 +16,8 @@ use tui::{
 };
 
 use crate::{
-    character::{Character, Player},
-    game::{Game, GameMode, GameState, GameUI},
+    components::player::Player,
+    game::{Character, Game, GameMode, GameState, GameUI},
 };
 
 pub fn run(tick_rate: Duration) -> Result<(), Box<dyn Error>> {

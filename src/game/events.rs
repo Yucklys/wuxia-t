@@ -2,8 +2,8 @@ use assets_manager::{loader, Asset, AssetCache};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    components::message::{MessageSystem, Msg},
     game::GameSwitch,
-    message::{MessageSystem, Msg},
 };
 
 #[derive(Deserialize, Clone, Hash, Eq, PartialEq)]

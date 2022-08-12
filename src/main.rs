@@ -1,11 +1,6 @@
-mod character;
 mod components;
-mod events;
 mod game;
-mod message;
-mod ui;
 mod utils;
-mod world;
 
 use std::{error::Error, time::Duration};
 

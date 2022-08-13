@@ -14,6 +14,13 @@ use tui::{
     widgets::Widget,
 };
 
+pub enum Id {
+    Dashboard,
+    Map,
+    Dialogue,
+    PlayerInfo,
+}
+
 pub enum Direction {
     Left,
     Right,
@@ -209,12 +216,12 @@ impl fmt::Display for Hour {
 }
 
 #[derive(Clone)]
-struct Menu<'a> {
+struct Menu {
     selected: Option<usize>,
-    items: Vec<&'a str>,
+    items: Vec<String>,
 }
 
-impl<'a> Widget for Menu<'a> {
+impl Widget for Menu {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let width = area.width;
         let menu_str_len = self.items.iter().fold(0, |sum, i| sum + i.chars().count()) as u16; // "< item >"
@@ -248,11 +255,11 @@ impl<'a> Widget for Menu<'a> {
     }
 }
 
-impl<'a> Menu<'a> {
-    fn with_items(items: Vec<&'a str>) -> Menu<'a> {
+impl Menu {
+    fn with_items(items: Vec<&str>) -> Menu {
         Menu {
             selected: if items.is_empty() { None } else { Some(0) },
-            items,
+            items: items.iter().map(|i| i.to_string()).collect(),
         }
     }
 

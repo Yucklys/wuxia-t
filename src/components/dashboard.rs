@@ -8,12 +8,12 @@ use crate::game::GameState;
 
 use super::Menu;
 
-pub struct Dashboard<'a> {
-    menu: Menu<'a>,
+pub struct Dashboard {
+    menu: Menu,
 }
 
-impl<'a> Default for Dashboard<'a> {
-    fn default() -> Dashboard<'a> {
+impl Default for Dashboard {
+    fn default() -> Dashboard {
         Self {
             menu: Menu::with_items(vec![
                 "再入江湖",
@@ -26,7 +26,7 @@ impl<'a> Default for Dashboard<'a> {
     }
 }
 
-impl<'a> Dashboard<'a> {
+impl Dashboard {
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, _state: &mut GameState) {
         let chunks = Layout::default()
             .constraints([Constraint::Min(30), Constraint::Length(3)].as_ref())

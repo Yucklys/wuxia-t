@@ -214,11 +214,11 @@ impl World {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum Maps<'a> {
-    HuanHuaCun(&'a str),
+pub enum Maps {
+    HuanHuaCun(String),
 }
 
-impl<'a> Maps<'a> {
+impl Maps {
     pub fn map_file(&self) -> &str {
         match &self {
             Maps::HuanHuaCun(_) => "浣花村",

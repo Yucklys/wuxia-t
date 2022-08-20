@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use tui::{
     backend::Backend,
@@ -9,10 +7,7 @@ use tui::{
     Frame,
 };
 
-use crate::{
-    components::{Attribute, Pos, Property},
-    game::Character,
-};
+use crate::game::{Attribute, Character, Pos, Property, PropertyType, PropertyValue};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct Player {
@@ -20,7 +15,7 @@ pub struct Player {
     pos: Pos,
 
     attr: Attribute,
-    prop: HashMap<String, Property>,
+    prop: Property,
     // TODO Add a buff field to show changes in attr and prop
 }
 
@@ -36,7 +31,7 @@ impl Player {
 }
 
 impl Character for Player {
-    fn draw_long_desc<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {}
+    fn draw_long_desc<B: Backend>(&self, _f: &mut Frame<B>, _area: Rect) {}
 
     fn draw_short_desc<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
         let chunks = Layout::default()
@@ -77,14 +72,26 @@ impl Character for Player {
                 .split(chunks[1]);
 
             let (cur_jing, cur_qi, cur_shen) = (
-                self.prop.get("jing").unwrap_or(&Property::Jing(0)),
-                self.prop.get("qi").unwrap_or(&Property::Jing(0)),
-                self.prop.get("shen").unwrap_or(&Property::Jing(0)),
+                self.prop
+                    .get(&PropertyType::Jing)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
+                self.prop
+                    .get(&PropertyType::Qi)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
+                self.prop
+                    .get(&PropertyType::Shen)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
             );
             let (max_jing, max_qi, max_shen) = (
-                self.prop.get("jing").unwrap_or(&Property::Jing(0)),
-                self.prop.get("qi").unwrap_or(&Property::Jing(0)),
-                self.prop.get("shen").unwrap_or(&Property::Jing(0)),
+                self.prop
+                    .get(&PropertyType::MaxJing)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
+                self.prop
+                    .get(&PropertyType::MaxQi)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
+                self.prop
+                    .get(&PropertyType::MaxShen)
+                    .unwrap_or(&PropertyValue::Number(0.0)),
             );
 
             let (jing_gauge, qi_gauge, shen_gauge) = (
@@ -97,7 +104,7 @@ impl Character for Player {
                     )
                     .label(format!("{cur}/{max}", cur = cur_jing, max = max_jing))
                     .gauge_style(Style::default().fg(Color::Red).bg(Color::Black))
-                    .ratio(max_jing.value() / cur_jing.value()),
+                    .ratio(max_jing.unwrap_number() / cur_jing.unwrap_number()),
                 Gauge::default()
                     .block(
                         Block::default()
@@ -107,7 +114,7 @@ impl Character for Player {
                     )
                     .label(format!("{cur}/{max}", cur = cur_qi, max = max_qi))
                     .gauge_style(Style::default().fg(Color::Blue).bg(Color::Black))
-                    .ratio(max_qi.value() / cur_qi.value()),
+                    .ratio(max_qi.unwrap_number() / cur_qi.unwrap_number()),
                 Gauge::default()
                     .block(
                         Block::default()
@@ -117,7 +124,7 @@ impl Character for Player {
                     )
                     .gauge_style(Style::default().fg(Color::Yellow).bg(Color::Black))
                     .label(format!("{cur}/{max}", cur = cur_shen, max = max_shen))
-                    .ratio(max_shen.value() / cur_shen.value()),
+                    .ratio(max_shen.unwrap_number() / cur_shen.unwrap_number()),
             );
 
             f.render_widget(jing_gauge, chunks[0]);

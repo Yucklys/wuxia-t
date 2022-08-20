@@ -63,7 +63,21 @@ fn run_game<B: Backend>(
     loop {
         terminal.draw(|f| {
             match &game.state.game_mode {
-                None => game.ui.draw(f, &mut game.state),
+                None => {
+                    let chunks = Layout::default()
+                        .constraints([Constraint::Min(30), Constraint::Length(3)].as_ref())
+                        .horizontal_margin(1)
+                        .split(f.size());
+
+                    if let Some(index) = game.ui.dashboard.selected() {
+                        match index {
+                            0 => game.ui.save_menu.view(f, chunks[0]),
+                            _ => {}
+                        }
+                    }
+
+                    game.ui.dashboard.draw(f, chunks[1]);
+                }
                 Some(mode) => match mode {
                     GameMode::Edit => {}
                     GameMode::Story => {
@@ -116,6 +130,7 @@ fn run_game<B: Backend>(
         }
 
         if game.state.should_quit {
+            game.quit_game();
             return Ok(());
         }
     }

@@ -34,6 +34,16 @@ impl GameState {
         }
     }
 
+    pub fn from_json(cache: &AssetCache, json: &str) -> Self {
+        match serde_json::from_str::<GameState>(json) {
+            Ok(mut state) => {
+                state.load(cache);
+                state
+            }
+            Err(_) => panic!("Failed to load from save"),
+        }
+    }
+
     pub fn load(&mut self, cache: &AssetCache) {
         self.load_map(cache);
         self.load_events(cache);

@@ -1,10 +1,4 @@
-use tui::{
-    backend::Backend,
-    layout::{Constraint, Layout},
-    Frame,
-};
-
-use crate::game::GameState;
+use tui::{backend::Backend, layout::Rect, Frame};
 
 use super::Menu;
 
@@ -27,12 +21,8 @@ impl Default for Dashboard {
 }
 
 impl Dashboard {
-    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, _state: &mut GameState) {
-        let chunks = Layout::default()
-            .constraints([Constraint::Min(30), Constraint::Length(3)].as_ref())
-            .split(f.size());
-
-        f.render_widget(self.menu.clone(), chunks[1]);
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+        f.render_widget(self.menu.clone(), area);
     }
 
     pub fn on_key(&mut self, code: char) {

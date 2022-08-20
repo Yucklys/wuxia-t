@@ -3,9 +3,14 @@ mod events;
 mod state;
 mod ui;
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::prelude::*,
+};
 
 use assets_manager::{loader, Asset, AssetCache};
+use chrono::{DateTime, Utc};
 use crossterm::event::{KeyCode, KeyEvent};
 use serde::{Deserialize, Serialize};
 
@@ -33,16 +38,6 @@ impl Game {
                 },
             },
             None => match key.code {
-                KeyCode::Enter => {
-                    if let Some(i) = self.ui.dashboard.selected() {
-                        match i {
-                            0 => self.load_save(),
-                            1 => self.start_game(),
-                            2 => self.state.game_mode = Some(GameMode::Edit),
-                            _ => {}
-                        }
-                    }
-                }
                 KeyCode::Char(c) => self.ui.on_key(c, &mut self.state),
                 _ => {}
             },
@@ -59,6 +54,33 @@ impl Game {
         self.state.curr_map = Some(Maps::HuanHuaCun("tiles".to_string()));
         self.state.load(&self.cache);
         self.ui.focus(Id::Map);
+    }
+
+    pub fn quit_game(&mut self) {
+        self.save_game();
+    }
+
+    pub fn save_game(&self) {
+        if let Some(config_path) = dirs::data_dir() {
+            let config_path = config_path.join("wuxia");
+            let save_dir = config_path.join("saves");
+            if !save_dir.is_dir() {
+                // create save directory
+                fs::create_dir_all(&save_dir).unwrap();
+            }
+
+            // parse game state to string    }
+            match serde_json::to_string(&self.state) {
+                Ok(game_state) => {
+                    let now: DateTime<Utc> = Utc::now();
+                    let save_file = save_dir.join(format!("autosave-{}", now.to_rfc3339()));
+                    let mut file = File::create(&save_file).expect("failed to create save file");
+                    file.write_all(game_state.as_bytes())
+                        .expect("failed to write to save file");
+                }
+                Err(_) => panic!("failed to parse GameState"),
+            }
+        }
     }
 
     pub fn on_tick(&mut self) {

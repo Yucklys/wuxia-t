@@ -130,7 +130,6 @@ fn run_game<B: Backend>(
         }
 
         if game.state.should_quit {
-            game.quit_game();
             return Ok(());
         }
     }

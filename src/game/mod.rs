@@ -33,14 +33,14 @@ impl Game {
             Some(mode) => match mode {
                 GameMode::Edit => {}
                 GameMode::Story => match key.code {
-                    KeyCode::Char(c) => self.ui.on_key(c, &mut self.state),
-                    _ => {}
+                    KeyCode::Char('q') => {
+                        self.state.should_quit = true;
+                        self.save_game();
+                    }
+                    _ => self.ui.on_key(key, &mut self.state),
                 },
             },
-            None => match key.code {
-                KeyCode::Char(c) => self.ui.on_key(c, &mut self.state),
-                _ => {}
-            },
+            None => self.ui.on_key(key, &mut self.state),
         }
     }
 
@@ -54,10 +54,6 @@ impl Game {
         self.state.curr_map = Some(Maps::HuanHuaCun("tiles".to_string()));
         self.state.load(&self.cache);
         self.ui.focus(Id::Map);
-    }
-
-    pub fn quit_game(&mut self) {
-        self.save_game();
     }
 
     pub fn save_game(&self) {

@@ -19,6 +19,18 @@ pub struct SaveData {
     entry: Vec<DirEntry>,
 }
 
+impl SaveData {
+    pub fn sort(&mut self) {
+        self.entry.sort_by(|i, j| {
+            j.metadata()
+                .unwrap()
+                .modified()
+                .unwrap()
+                .cmp(&i.metadata().unwrap().modified().unwrap())
+        });
+    }
+}
+
 impl TableData for SaveData {
     fn header(&self) -> Row {
         Row::new(vec!["名称", "日期"])
@@ -75,9 +87,11 @@ impl SaveMenu {
             .expect("Cannot read save directory")
             .map(|entry| entry.expect("Cannot read save file"))
             .collect();
+        let mut save_data = SaveData { entry: data };
+        save_data.sort();
 
         Self {
-            list: StatefulTable::new(SaveData { entry: data }),
+            list: StatefulTable::new(save_data),
         }
     }
 

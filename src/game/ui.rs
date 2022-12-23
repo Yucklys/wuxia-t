@@ -1,8 +1,15 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use std::collections::HashMap;
+
+use crossterm::event::{Event, KeyCode, KeyEvent};
+use tui::{
+    backend::Backend,
+    layout::Rect,
+    widgets::{Block, Widget},
+};
 
 use crate::components::{dashboard::Dashboard, saves::SaveMenu, Direction, Id};
 
-use super::GameState;
+use super::{GameState, Message, Value};
 
 pub struct GameUI {
     pub focus: Id,

@@ -137,3 +137,9 @@ impl GameSwitch {
         active
     }
 }
+
+pub enum Value {
+    Int(usize),
+}
+
+pub enum Message {}
